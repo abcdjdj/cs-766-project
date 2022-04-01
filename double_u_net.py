@@ -27,11 +27,11 @@ def squeeze_and_excite(inputs, ratio = 8):
 
     #print(f'Shape after  - {se.shape}')
 
-    print(se.shape)
+    #print(se.shape)
 
     se = se.view(init.shape[0],filters,1,1) #(b, 32, 1, 1)
 
-    print(se.shape)
+    #print(se.shape)
 
     return torch.mul(init,se) #(b,32,128,128)
 """
@@ -117,6 +117,8 @@ def conv_block(x, filters):
     x = nn.BatchNorm2d(num_features = x.shape[1])(x)
     x = nn.ReLU()(x)
 
+    x = squeeze_and_excite(x)
+
     return x
 
 """
@@ -148,6 +150,36 @@ def output_block(inputs):
     x = nn.Sigmoid()(x)
     return x
 
+
+def encoder2(inputs):
+    num_filters = [32, 64, 128, 256]
+    skip_connections = []
+    x = inputs
+
+    for f in num_filters:
+        x = conv_block(x, f)
+        skip_connections.append(x)
+        x = nn.MaxPool2d(kernel_size = (2,2))(x)
+
+    return x, skip_connections
+
+def decoder2(inputs, skip_1, skip_2):
+    num_filters = [256, 128, 64, 32]
+
+    skip_2.reverse()
+
+    x = inputs
+
+    for i,f in enumerate(num_filters):
+        x = nn.UpsamplingBilinear2d(size=(2*x.shape[2], 2*x.shape[3]))(x)
+        #print(f"X -> {x.shape}")
+        #print(f"Skip1 -> {torch.Tensor(skip_1[i]).shape}")
+        #print(f"Skip2 -> {torch.Tensor(skip_2[i]).shape}")
+        x = torch.cat([x, skip_1[i], skip_2[i]], dim=1)
+        x = conv_block(x, f)
+
+    return x
+
 """
 Function: Network 1 pipeline
 Input: Batches of Images
@@ -164,6 +196,17 @@ def build_model(inputs):
     #print(f"Mask shape {mask.shape}")
     network1_op = inputs * mask
     #print(f"Network 1 o/p shape {network1_op.shape}")
+    encoder2_op,encoder2_skip_conns = encoder2(network1_op)
+    #print(f"Encoder2 o/p shape {encoder2_op.shape}")
+    aspp2_op = ASPP(encoder2_op, 64)
+    #print(f"ASPP2 o/p shape {aspp2_op.shape}")
+    decoder2_op = decoder2(aspp2_op, encoder1_skip_conns, encoder2_skip_conns)
+    #print(f"Decoder2 o/p shape {decoder2_op.shape}")
+    network2_op = output_block(decoder2_op)
+    #print(f"Network 2 o/p shape {network2_op.shape}")
+    final_output = torch.cat([mask, network2_op], dim = 1)
+    print(f"Final o/p shape {final_output.shape}")
+
 
 
 '''
