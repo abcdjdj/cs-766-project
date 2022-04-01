@@ -62,7 +62,7 @@ def ASPP(x, filter_count):
     y = nn.Conv2d(dilation=1, in_channels = y.shape[1], out_channels = filter_count, kernel_size = 1, padding='same', bias=False)(y)
     y = nn.BatchNorm2d(num_features = y.shape[1])(y)
     y = nn.ReLU()(y)
-    print(y.shape)
+    return y
 
 x = torch.ones(8, 32, 128, 128)
 ASPP(x, 64)
