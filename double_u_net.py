@@ -65,7 +65,11 @@ def ASPP(x, filter_count):
     return y
 
 
-
+"""
+function: This is Encoder 1
+params: Medical Image Input
+return: Output of Encoder1, 4 Skip Conns for Decoder 1
+"""
 def encoder1(inputs):
     model = models.vgg19()
     #print(summary(model,(3,256,256)))
@@ -76,6 +80,7 @@ def encoder1(inputs):
     indices = [3, 8, 17, 26, 35]
 
     skip_connections = []
+
     def encoder1_receive_outputs(layer, _, output):
         skip_connections.append(output)
 
@@ -88,6 +93,41 @@ def encoder1(inputs):
 
     return skip_connections[-1], skip_connections[0:-1]
 
+"""
+Function: 2 Blocks of Convolution + BN + ReLU
+Input:
+Output:
+"""
+def conv_block(x, filters):
+    x = nn.Conv2d(in_channels = x.shape[1], out_channels = filters, kernel_size = 3, padding='same')(x)
+    x = nn.BatchNorm2d(num_features = x.shape[1])(x)
+    x = nn.ReLU()(x)
+
+    x = nn.Conv2d(in_channels = x.shape[1], out_channels = filters, kernel_size = 3, padding='same')(x)
+    x = nn.BatchNorm2d(num_features = x.shape[1])(x)
+    x = nn.ReLU()(x)
+
+    return x
+
+"""
+Function: Decoder 1
+Params:
+Output:
+"""
+def decoder1(inputs, skip_connections):
+    num_filters = [256, 128, 64, 32]
+
+    skip_connections.reverse()
+
+    x = inputs
+
+    for i,f in enumerate(num_filters):
+        x = nn.UpsamplingBilinear2d(size=(2*x.shape[2], 2*x.shape[3]))(x)
+        x = torch.cat([x, skip_connections[i]], dim=1)
+        x = conv_block(x, f)
+
+    return x
+
 '''
 Tester functions
 '''
@@ -99,9 +139,13 @@ def test_encoder1():
     for conn in skip_connections:
         print(conn.shape)
 
+def test_decoder1():
+    output, skip_connections = encoder1(torch.ones(1,3,256,256))
+    print(decoder1(output,skip_connections).shape)
+    #Output we get is (1,32,256,256)
 
 def main():
-    test_encoder1()
+    test_decoder1()
 
 if __name__ == '__main__':
     main()
