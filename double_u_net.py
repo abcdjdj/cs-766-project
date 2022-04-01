@@ -64,6 +64,8 @@ def ASPP(x, filter_count):
     y = nn.ReLU()(y)
     return y
 
+
+
 def encoder1(inputs):
     model = models.vgg19()
     #print(summary(model,(3,256,256)))
@@ -73,11 +75,33 @@ def encoder1(inputs):
 
     indices = [3, 8, 17, 26, 35]
 
-    #print(model)
+    skip_connections = []
+    def encoder1_receive_outputs(layer, _, output):
+        skip_connections.append(output)
 
     for name, layer in model.named_children():
         for idx in indices:
-            print(layer[idx])
+            layer[idx].register_forward_hook(encoder1_receive_outputs)
         break
 
-encoder1(torch.ones(1,3,256,256))
+    model(inputs)
+
+    return skip_connections[-1], skip_connections[0:-1]
+
+'''
+Tester functions
+'''
+def test_encoder1():
+    output, skip_connections = encoder1(torch.ones(1,3,256,256))
+    print("Encoder1 Output = ")
+    print(output.shape)
+    print("Skip connections = ")
+    for conn in skip_connections:
+        print(conn.shape)
+
+
+def main():
+    test_encoder1()
+
+if __name__ == '__main__':
+    main()
