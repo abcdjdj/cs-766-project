@@ -5,6 +5,11 @@ import torch.optim as optim
 from torchsummary import summary
 from torchvision import models
 
+"""
+Function: Squueze and Excite Block
+Inputs: Activation Maps
+Outputs: Relevant Activation Maps retained, redundant dropped
+"""
 def squeeze_and_excite(inputs, ratio = 8):
     init = inputs  #(b, 32, 128, 128)
     channel_axis = 1
@@ -29,39 +34,44 @@ def squeeze_and_excite(inputs, ratio = 8):
     print(se.shape)
 
     return torch.mul(init,se) #(b,32,128,128)
-
+"""
+Function: ASPP to get high resolution feature maps
+Inputs: feature maps, output channels desired 
+Outputs: High Res feature maps
+"""
 def ASPP(x, filter_count):
     se = nn.AvgPool2d(kernel_size = (x.shape[2], x.shape[3]))(x)
     se = nn.Conv2d(in_channels = se.shape[1], out_channels = filter_count, kernel_size = 1, padding='same')(se)
     se = nn.BatchNorm2d(num_features = se.shape[1])(se)
     se = nn.ReLU()(se)
     se = nn.UpsamplingBilinear2d(size=(x.shape[2], x.shape[3]))(se)
-    print(se.shape)
+    #print(se.shape)
 
     y1 = nn.Conv2d(dilation=1, in_channels = x.shape[1], out_channels = filter_count, kernel_size = 1, padding='same', bias=False)(x)
     y1 = nn.BatchNorm2d(num_features = y1.shape[1])(y1)
     y1 = nn.ReLU()(y1)
-    print(y1.shape)
+    #print(y1.shape)
 
     y2 = nn.Conv2d(dilation=6, in_channels = x.shape[1], out_channels = filter_count, kernel_size = 1, padding='same', bias=False)(x)
     y2 = nn.BatchNorm2d(num_features = y2.shape[1])(y2)
     y2 = nn.ReLU()(y2)
-    print(y2.shape)
+    #print(y2.shape)
 
     y3 = nn.Conv2d(dilation=12, in_channels = x.shape[1], out_channels = filter_count, kernel_size = 1, padding='same', bias=False)(x)
     y3 = nn.BatchNorm2d(num_features = y3.shape[1])(y3)
     y3 = nn.ReLU()(y3)
-    print(y3.shape)
+    #print(y3.shape)
 
     y4 = nn.Conv2d(dilation=18, in_channels = x.shape[1], out_channels = filter_count, kernel_size = 1, padding='same', bias=False)(x)
     y4 = nn.BatchNorm2d(num_features = y4.shape[1])(y4)
     y4 = nn.ReLU()(y4)
-    print(y4.shape)
+    #print(y4.shape)
 
     y = torch.cat([se, y1, y2, y3, y4], dim=1)
     y = nn.Conv2d(dilation=1, in_channels = y.shape[1], out_channels = filter_count, kernel_size = 1, padding='same', bias=False)(y)
     y = nn.BatchNorm2d(num_features = y.shape[1])(y)
     y = nn.ReLU()(y)
+    #print(y.shape)
     return y
 
 
@@ -95,8 +105,8 @@ def encoder1(inputs):
 
 """
 Function: 2 Blocks of Convolution + BN + ReLU
-Input:
-Output:
+Input: Input Activation Map, Desired output channels
+Output: Convolved Activation Maps
 """
 def conv_block(x, filters):
     x = nn.Conv2d(in_channels = x.shape[1], out_channels = filters, kernel_size = 3, padding='same')(x)
@@ -111,8 +121,8 @@ def conv_block(x, filters):
 
 """
 Function: Decoder 1
-Params:
-Output:
+Params: ASPP Output, Skip Connections from Encoder1
+Output: To be passed through output_block to get mask
 """
 def decoder1(inputs, skip_connections):
     num_filters = [256, 128, 64, 32]
@@ -127,6 +137,34 @@ def decoder1(inputs, skip_connections):
         x = conv_block(x, f)
 
     return x
+
+"""
+Function: To get mask from decoder1 output
+Input: Decoder1 output
+Output: Mask for Network1
+"""
+def output_block(inputs):
+    x = nn.Conv2d(in_channels = inputs.shape[1], out_channels = 1, kernel_size = 1, padding = "same")(inputs)
+    x = nn.Sigmoid()(x)
+    return x
+
+"""
+Function: Network 1 pipeline
+Input: Batches of Images
+Output: Input * Mask
+"""
+def build_model(inputs):
+    encoder1_op, encoder1_skip_conns = encoder1(inputs)
+    #print(f"Encoder 1 o/p shape {encoder1_op.shape}")
+    aspp_op = ASPP(encoder1_op, 64)
+    #print(f"ASPP o/p shape {aspp_op.shape}")
+    decoder1_op = decoder1(aspp_op, encoder1_skip_conns)
+    #print(f"Decoder 1 o/p shape {decoder1_op.shape}")
+    mask = output_block(decoder1_op)
+    #print(f"Mask shape {mask.shape}")
+    network1_op = inputs * mask
+    #print(f"Network 1 o/p shape {network1_op.shape}")
+
 
 '''
 Tester functions
@@ -145,7 +183,7 @@ def test_decoder1():
     #Output we get is (1,32,256,256)
 
 def main():
-    test_decoder1()
+    build_model(torch.ones(8,3,256,256))
 
 if __name__ == '__main__':
     main()
