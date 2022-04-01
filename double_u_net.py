@@ -4,6 +4,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchsummary import summary
 from torchvision import models
+from imageio import imread as imread
+import matplotlib.pyplot as plt
 
 """
 Function: Squueze and Excite Block
@@ -206,6 +208,7 @@ def build_model(inputs):
     #print(f"Network 2 o/p shape {network2_op.shape}")
     final_output = torch.cat([mask, network2_op], dim = 1)
     print(f"Final o/p shape {final_output.shape}")
+    return final_output
 
 
 
@@ -226,7 +229,11 @@ def test_decoder1():
     #Output we get is (1,32,256,256)
 
 def main():
-    build_model(torch.ones(8,3,256,256))
+    inputs = imread("archive/PNG/Original/1.png")
+    inputs = torch.from_numpy(inputs)
+    inputs2 = inputs1 = inputs.view(-1,3,inputs.shape[0], inputs.shape[1])
+    ip = torch.cat([inputs1, inputs2])
+    print(build_model(ip.float()))
 
 if __name__ == '__main__':
     main()
