@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
-#model = torch.hub.load('pytorch/vision:v0.10.0', 'vgg19', pretrained=True)
+from torchsummary import summary
+from torchvision import models
 
 def squeeze_and_excite(inputs, ratio = 8):
     init = inputs  #(b, 32, 128, 128)
@@ -64,5 +64,20 @@ def ASPP(x, filter_count):
     y = nn.ReLU()(y)
     return y
 
-x = torch.ones(8, 32, 128, 128)
-ASPP(x, 64)
+def encoder1(inputs):
+    model = models.vgg19()
+    #print(summary(model,(3,256,256)))
+
+    #skip connections from pre-trained VGG-19
+    names = ["ReLU-4", "ReLU-9", "ReLU-18", "ReLU-27", "ReLU-36"]
+
+    indices = [3, 8, 17, 26, 35]
+
+    #print(model)
+
+    for name, layer in model.named_children():
+        for idx in indices:
+            print(layer[idx])
+        break
+
+encoder1(torch.ones(1,3,256,256))
