@@ -1,6 +1,7 @@
 import os
 import glob
 import cv2
+import utils
 from albumentations import (
     PadIfNeeded,
     HorizontalFlip,
@@ -31,15 +32,6 @@ from albumentations import (
 )
 
 '''
-Reads the image specified by 'path' and returns it
-param : path - path of image file
-return : image as a numpy array
-'''
-def read_img(path):
-    image = cv2.imread(path, cv2.IMREAD_COLOR)
-    return image
-
-'''
 Generates 25 additional augmented images per image for the list of (images, masks)
 passed
 param : list of image paths, list of mask paths
@@ -57,8 +49,8 @@ def augment(img_list, mask_list, out_path):
         mask_name = mask_path[mask_path.index(os.sep) + 1:]
         print(img_name, mask_name)
 
-        x = read_img(image_path)
-        y = read_img(mask_path)
+        x = utils.read_img(image_path)
+        y = utils.read_img(mask_path)
 
         ## Center Crop
         augmented = CenterCrop(p=1, height=crop_size[0], width=crop_size[1])(image=x, mask=y)

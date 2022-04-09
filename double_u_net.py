@@ -6,6 +6,7 @@ from torchsummary import summary
 from torchvision import models
 from imageio import imread as imread
 import matplotlib.pyplot as plt
+import utils
 
 """
 Function: Squueze and Excite Block
@@ -229,9 +230,9 @@ def test_decoder1():
     #Output we get is (1,32,256,256)
 
 def main():
-    inputs = imread("archive/PNG/Original/1.png")
-    inputs = torch.from_numpy(inputs)
-    inputs2 = inputs1 = inputs.view(-1,3,inputs.shape[0], inputs.shape[1])
+    inputs = utils.read_img("cvc-DB/PNG/Original/1.png")
+    inputs1 = utils.img_to_tensor(inputs)
+    inputs2 = inputs1
     ip = torch.cat([inputs1, inputs2])
     print(build_model(ip.float()))
 
