@@ -226,7 +226,10 @@ def test_encoder1():
 
 def test_decoder1():
     output, skip_connections = encoder1(torch.ones(1,3,256,256))
-    print(decoder1(output,skip_connections).shape)
+    print(output.shape)
+    print(skip_connections[2].shape)
+    print(skip_connections[3].shape)
+    #print(decoder1(output,skip_connections).shape)
     #Output we get is (1,32,256,256)
 
 def main():
@@ -237,4 +240,5 @@ def main():
     print(build_model(ip.float()))
 
 if __name__ == '__main__':
-    main()
+    #main()
+    test_decoder1()

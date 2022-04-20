@@ -56,6 +56,8 @@ def augment(img_list, mask_list, out_path):
         augmented = CenterCrop(p=1, height=crop_size[0], width=crop_size[1])(image=x, mask=y)
         x1 = augmented['image']
         y1 = augmented['mask']
+        #x1 = cv2.copyMakeBorder(x1 , 0, x.shape[0] - x1.shape[0], 0, x.shape[1] - x1.shape[1], cv2.BORDER_CONSTANT, value = 0)
+        #y1 = cv2.copyMakeBorder(y1 , 0, y.shape[0] - y1.shape[0], 0, y.shape[1] - y1.shape[1], cv2.BORDER_CONSTANT, value = 0)
 
         ## Crop
         x_min = 0
@@ -176,13 +178,16 @@ def augment(img_list, mask_list, out_path):
         counter = 1
         img_name = img_name[0:img_name.index('.')] # Remove the extension
         for image, mask in zip(images, masks):
+            i = cv2.resize(image, (x.shape[1], x.shape[0]))
+            m = cv2.resize(mask, (x.shape[1], x.shape[0]))
+
             image_path = os.path.join(out_path, "image/", f'{img_name}_{counter}.png')
             mask_path  = os.path.join(out_path, "mask/", f'{img_name}_{counter}.png')
-            cv2.imwrite(image_path, image)
-            cv2.imwrite(mask_path, mask)
+            cv2.imwrite(image_path, i)
+            cv2.imwrite(mask_path, m)
             counter = counter + 1
         
-        break
+        
 
     return 0
 
