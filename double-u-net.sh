@@ -28,5 +28,5 @@ pip3 install torch torchvision torchaudio torchgeometry opencv-python tqdm
 
 ulimit -s unlimited
 
-python /srv/home/kanbur/MSRF_Net/euler_train.py
+python /srv/home/kanbur/double-u-net/euler_train.py
 echo "All Done!"
