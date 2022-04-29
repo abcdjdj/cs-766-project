@@ -43,7 +43,7 @@ def img_to_tensor(img):
 def mask_to_tensor(mask):
     t = torch.from_numpy(mask)
     t = t.view(-1, t.shape[0], t.shape[1])
-    return t
+    return t.long()
 
 '''
 t - tensor of shape [H, W]

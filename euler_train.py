@@ -10,6 +10,7 @@ import torch.optim as optim
 import cv2
 import glob
 from tqdm import tqdm as tqdm
+from torchgeometry.losses.dice import DiceLoss
 import pickle as pkl
 import os
 
@@ -58,7 +59,7 @@ def train(train_loader_x, train_loader_y, batch_size, num_batches, num_epochs, l
         double_u_net = DoubleUNet(tmp).to(device)
     
     optimizer = optim.NAdam(double_u_net.parameters(), lr = learning_rate)
-    criterion  = nn.BCELoss()
+    criterion  = DiceLoss()
 
     for epochs in tqdm(range(num_epochs)):
         running_loss = 0
@@ -66,8 +67,8 @@ def train(train_loader_x, train_loader_y, batch_size, num_batches, num_epochs, l
             img_data = [euler_utils.img_to_tensor(euler_utils.read_img(ele)) for ele in train_loader_x[idx]]
             img_data = torch.cat(img_data, dim = 0).to(device)
 
-            mask_data = [euler_utils.mask_to_tensor(euler_utils.read_mask(ele)).repeat(2, 1, 1) for ele in train_loader_y[idx]]
-            mask_data = torch.stack(mask_data, dim = 0).to(device)
+            mask_data = [euler_utils.mask_to_tensor(euler_utils.read_mask(ele)) for ele in train_loader_y[idx]]
+            mask_data = torch.cat(mask_data, dim = 0).to(device)
             
             mask_pred = double_u_net.forward(img_data.float())
 
