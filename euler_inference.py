@@ -42,7 +42,7 @@ def load_split_sets():
     
     return train_set, val_set, test_set
 
-def infer(input_filenames):
+def infer(input_filenames, number):
     #print('Files = ' + str(input_filenames))
     x = [euler_utils.img_to_tensor(euler_utils.read_img(ele[0])) for ele in input_filenames]
     x = torch.cat(x, dim = 0)
@@ -60,27 +60,28 @@ def infer(input_filenames):
 
     dice_loss = euler_metrics.dice_loss(y_truth, y_pred2)
     iou = euler_metrics.iou(y_truth, y_pred2)
-    # print(f'Dice Loss = {dice_loss}')
-    # print(f'IOU = {iou}')
+    print(f'Dice Loss = {dice_loss}')
+    print(f'IOU = {iou}')
 
-    # mask_inference = y_pred2.detach().cpu().numpy()*(255)
-    # cv2.imwrite('infer.png', mask_inference)
-    # shutil.copyfile(input_filenames[0][1], 'infer_exp.png')
+    mask_inference = y_pred2.detach().cpu().numpy()*(255)
+    cv2.imwrite(f'good_results/infer{number}.png', mask_inference)
+    shutil.copyfile(input_filenames[0][1], f'good_results/infer_exp{number}.png')
 
     return dice_loss, iou
 
-# 1, 
-number = 1
+number = 777
 train_set, val_set, test_set = load_split_sets()
+print(train_set[number])
+infer([train_set[number], train_set[number]], number)
 
-dice_avg = 0
-iou_avg = 0
-for img in tqdm(train_set):
-    dice_loss, iou = infer([img, img])
-    dice_avg += dice_loss
-    iou_avg += iou
+# dice_avg = 0
+# iou_avg = 0
+# for img in tqdm(train_set):
+#     dice_loss, iou = infer([img, img])
+#     dice_avg += dice_loss
+#     iou_avg += iou
 
-dice_avg = dice_avg / len(train_set)
-iou_avg = iou_avg / len(train_set)
-print(f'Avg Dice Loss = {dice_avg}')
-print(f'Avg IOU Loss = {iou_avg}')
+# dice_avg = dice_avg / len(train_set)
+# iou_avg = iou_avg / len(train_set)
+# print(f'Avg Dice Loss = {dice_avg}')
+# print(f'Avg IOU Loss = {iou_avg}')
