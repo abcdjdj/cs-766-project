@@ -66,6 +66,7 @@ def infer(input_filenames, number):
     mask_inference = y_pred2.detach().cpu().numpy()*(255)
     cv2.imwrite(f'comparable_results/infer_{number}_double.png', mask_inference)
     shutil.copyfile(input_filenames[0][1], f'comparable_results/infer_exp_{number}.png')
+    shutil.copyfile(input_filenames[0][0], f'comparable_results/input_{number}.png')
 
     return dice_loss, iou
 

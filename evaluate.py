@@ -52,7 +52,8 @@ def infer(input_filenames, number):
     mask_inference = y_pred2.detach().cpu().numpy()*(255)
     cv2.imwrite(f'good_results_double/infer{number}.png', mask_inference)
     shutil.copyfile(input_filenames[0][1], f'good_results_double/infer_exp{number}.png')
-
+    shutil.copyfile(input_filenames[0][0], f'comparable_results/infer_exp_{number}.png')
+    
     y_truth = (y_truth >= 0.5).int()
 
     y_pred2 = (y_pred2 >= 0.5).int()
