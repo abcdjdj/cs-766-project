@@ -64,15 +64,27 @@ def infer(input_filenames, number):
     print(f'IOU = {iou}')
 
     mask_inference = y_pred2.detach().cpu().numpy()*(255)
-    cv2.imwrite(f'good_results/infer{number}.png', mask_inference)
-    shutil.copyfile(input_filenames[0][1], f'good_results/infer_exp{number}.png')
+    cv2.imwrite(f'comparable_results/infer_{number}_double.png', mask_inference)
+    shutil.copyfile(input_filenames[0][1], f'comparable_results/infer_exp_{number}.png')
 
     return dice_loss, iou
 
-number = 777
-train_set, val_set, test_set = load_split_sets()
-print(train_set[number])
-infer([train_set[number], train_set[number]], number)
+#number = 1368
+# train_set, val_set, test_set = load_split_sets()
+
+with open("train_set_new.pkl", 'rb') as f:
+    train_set = pkl.load(f)
+
+with open("test_set_new.pkl", 'rb') as f:
+    test_set = pkl.load(f)
+
+
+#print(test_set[number])
+
+indices = [0, 1200, 1203, 1216, 1235, 1248, 1272, 1275]
+
+for idx in tqdm(indices):
+    infer([train_set[idx] if idx!=0 else test_set[idx], train_set[idx] if idx!=0 else test_set[idx]], idx)
 
 # dice_avg = 0
 # iou_avg = 0
